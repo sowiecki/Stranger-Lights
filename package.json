@@ -1,0 +1,30 @@
+{
+  "name": "stranger-lights",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./index.js",
+    "dev": "nodemon ./index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Nase00/Stranger-Lights.git"
+  },
+  "author": "Sean Owiecki",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Nase00/Stranger-Lights/issues"
+  },
+  "homepage": "https://github.com/Nase00/Stranger-Lights#readme",
+  "devDependencies": {
+    "eslint": "^4.9.0",
+    "nodemon": "^1.12.1",
+    "prettier": "^1.7.4"
+  },
+  "dependencies": {
+    "finalhandler": "^1.1.0",
+    "router": "^1.3.2",
+    "twitter": "^1.7.1"
+  }
+}
