@@ -9,6 +9,8 @@
 int greenButtonState = 0;
 int redButtonState = 0;
 
+const bool PRECISE =
+    false; // Change to true if you need to define exact light positions
 bool shouldDisplayMessage = false;
 const char *SSID = "";
 const char *PASSWORD = "";
@@ -74,7 +76,11 @@ void displayMessage() {
         for (auto value : pixelsArray) {
           Serial.println(value.as<char *>());
           const int letterPosition = value.as<int>();
-          lightLetter(letterPosition);
+          if (!PRECISE) {
+            lightLetter(letterPosition);
+          } else {
+            lightPreciseLetter(letterPosition);
+          }
         }
       }
     }
@@ -98,70 +104,131 @@ void lightLetter(int pixel) {
 
   strip.setPixelColor(pixelToLight, 0);
   strip.show();
-  wait(100);
+  wait(200);
   strip.setPixelColor(pixelToLight, colors[pixelToLight]);
   strip.show();
-  wait(550);
+  wait(1050);
   strip.setPixelColor(pixelToLight, 0);
   strip.show();
 }
 
-void lightAll() {
-  for (int i = 0; i < strip.numPixels(); i++) {
-    strip.setPixelColor(i, colors[i]);
-    strip.show();
+// Change each letter to the actual index of that letter's light position
+void lightPreciseLetter(int pixel) {
+  Serial.println(pixel);
+  if (pixel == 0) {
+    pixelToLight = 62; // a
+  } else if (pixel == 1) {
+    pixelToLight = 60; // b
+  } else if (pixel == 2) {
+    pixelToLight = 59; // c
+  } else if (pixel == 3) {
+    pixelToLight = 56; // d
+  } else if (pixel == 4) {
+    pixelToLight = 54; // e
+  } else if (pixel == 5) {
+    pixelToLight = 51; // f
+  } else if (pixel == 6) {
+    pixelToLight = 49; // g
+  } else if (pixel == 7) {
+    pixelToLight = 47; // h
+  } else if (pixel == 8) {
+    pixelToLight = 24; // i
+  } else if (pixel == 9) {
+    pixelToLight = 26; // j
+  } else if (pixel == 10) {
+    pixelToLight = 28; // k
+  } else if (pixel == 11) {
+    pixelToLight = 30; // l
+  } else if (pixel == 12) {
+    pixelToLight = 32; // m
+  } else if (pixel == 13) {
+    pixelToLight = 35; // n
+  } else if (pixel == 14) {
+    pixelToLight = 38; // o
+  } else if (pixel == 15) {
+    pixelToLight = 40; // p
+  } else if (pixel == 16) {
+    pixelToLight = 42; // q
+  } else if (pixel == 17) {
+    pixelToLight = 19; // r
+  } else if (pixel == 18) {
+    pixelToLight = 17; // s
+  } else if (pixel == 19) {
+    pixelToLight = 16; // t
+  } else if (pixel == 20) {
+    pixelToLight = 12; // u
+  } else if (pixel == 21) {
+    pixelToLight = 11; // v
+  } else if (pixel == 22) {
+    pixelToLight = 8; // w
+  } else if (pixel == 23) {
+    pixelToLight = 5; // x
+  } else if (pixel == 24) {
+    pixelToLight = 3; // y
+  } else if (pixel == 25) {
+    pixelToLight = 1; // z
   }
-}
 
-void lightErrorMessage() {
-  for (int i = 0; i < ERROR_MESSAGE_SIZE; i++) {
-    lightLetter(ERROR_MESSAGE[i]);
-  }
-}
-
-void colorWipe() {
-  for (uint16_t i = 0; i < strip.numPixels(); i++) {
-    strip.setPixelColor(i, 0);
-    strip.show();
-  }
-}
-
-void checkButtonState() {
-  greenButtonState = digitalRead(GREEN_BUTTON_PIN);
-  redButtonState = digitalRead(RED_BUTTON_PIN);
-
-  if (greenButtonState == LOW) {
-    shouldDisplayMessage = true;
-  } else if (redButtonState == HIGH) {
-    shouldDisplayMessage = false;
-  }
-}
-
-void initColors() {
-  for (int i = 0; i < strip.numPixels(); i++) {
-    int rgb = i % 5;
-    switch (rgb) {
-    case 0:
-      colors[i] = strip.Color(255, 0, 0); // green
-      break;
-    case 1:
-      colors[i] = strip.Color(0, 255, 0); // red
-      break;
-    case 2:
-      colors[i] = strip.Color(0, 0, 255); // blue
-      break;
-    case 3:
-      colors[i] = strip.Color(255, 0, 255); // magenta
-      break;
-    case 4:
-      colors[i] = strip.Color(255, 255, 0); // yellow
-      break;
+  void lightAll() {
+    for (int i = 0; i < strip.numPixels(); i++) {
+      strip.setPixelColor(i, colors[i]);
+      strip.show();
     }
   }
-}
 
-void wait(int ms) {
-  if (shouldDisplayMessage) {
-    delay(ms);
+  void lightErrorMessage() {
+    for (int i = 0; i < ERROR_MESSAGE_SIZE; i++) {
+      if (!PRECISE) {
+        lightLetter(ERROR_MESSAGE[i]);
+      } else {
+        lightPreciseLetter(ERROR_MESSAGE[i]);
+      }
+    }
   }
-}
+
+  void colorWipe() {
+    for (uint16_t i = 0; i < strip.numPixels(); i++) {
+      strip.setPixelColor(i, 0);
+      strip.show();
+    }
+  }
+
+  void checkButtonState() {
+    greenButtonState = digitalRead(GREEN_BUTTON_PIN);
+    redButtonState = digitalRead(RED_BUTTON_PIN);
+
+    if (greenButtonState == LOW) {
+      shouldDisplayMessage = true;
+    } else if (redButtonState == HIGH) {
+      shouldDisplayMessage = false;
+    }
+  }
+
+  void initColors() {
+    for (int i = 0; i < strip.numPixels(); i++) {
+      int rgb = i % 5;
+      switch (rgb) {
+      case 0:
+        colors[i] = strip.Color(255, 0, 0); // green
+        break;
+      case 1:
+        colors[i] = strip.Color(0, 255, 0); // red
+        break;
+      case 2:
+        colors[i] = strip.Color(0, 0, 255); // blue
+        break;
+      case 3:
+        colors[i] = strip.Color(255, 0, 255); // magenta
+        break;
+      case 4:
+        colors[i] = strip.Color(255, 255, 0); // yellow
+        break;
+      }
+    }
+  }
+
+  void wait(int ms) {
+    if (shouldDisplayMessage) {
+      delay(ms);
+    }
+  }

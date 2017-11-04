@@ -1,32 +1,20 @@
-# Pixel map
+# Stranger Lights
 
-```js
-{
-  0: 25, // a
-  1: 24, // b
-  2: 23, // c
-  3: 22, // d
-  4: 21, // e
-  5: 20, // f
-  6: 19, // g
-  7: 18, // h
-  8: 9, // i
-  9: 10, // j
-  10: 11, // k
-  11: 12, // l
-  12: 13, // m
-  13: 14, // n
-  14: 15, // o
-  15: 16, // p
-  16: 17 // q
-  17: 8, // r
-  18: 7, // s
-  19: 6, // t
-  20: 5, // u
-  21: 4, // v
-  22: 3, // w
-  23: 2, // x
-  24: 1, // y
-  25: 0 // z
-}
-```
+![demo](./demo.gif)
+
+# Hardware
+* [HiLetGo ESP8266](https://smile.amazon.com/HiLetgo-Internet-Development-Wireless-Micropython/dp/B010O1G1ES)
+* A strand/sequence of (at least) 26 WS2812 LEDs (search for "addressable Christmas lights", make certain they are WS2812 compatible)
+* Wallpaper and black paint
+
+# Setup
+Hang a strang of addressable LEDs, starting at the letter Z snaking up through I to Q, then up to H through A.
+Assuming a strange of exactly 26 pixels, see the pixel the [Pixel Map](./PIXELMAP.md) for which pixel index corresponds to which letter.
+
+### Firmware
+In [firmware/firmware.ino](./firmware/firmware.ino), set `*SSID` `*PASSWORD` to the SSID and password of your WiFi network.
+
+If your light strand doesn't correspond exactly to each letter, e.g. you have a strand of 50 lights with some being unused between each letter, set `PRECISE` to `false` and change the values in the method `lightPreciseLetter` to match your lights' positions.
+
+### Twitter API
+Deploy this application to Heroku, or feel free to use `strtw.herokuapp.com`. I'll keep it freely available as long as the rate limit doesn't get hit.

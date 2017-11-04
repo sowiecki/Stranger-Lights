@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "finalhandler": "^1.1.0",
+    "moment": "^2.19.1",
     "router": "^1.3.2",
     "twitter": "^1.7.1"
   }

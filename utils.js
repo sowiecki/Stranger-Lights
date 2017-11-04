@@ -1,4 +1,7 @@
+const moment = require('moment');
+
 const ENV = require('./env');
+const { TWEET_EXPIRED } = require('./constants');
 
 module.exports.convertTweetToLetterIndexes = (
   { text },
@@ -13,3 +16,11 @@ module.exports.convertTweetToLetterIndexes = (
 
   return JSON.stringify(indexes);
 };
+
+module.exports.getTime = () => moment();
+
+module.exports.getTimeSinceLastTweet = () =>
+  moment().subtract(TWEET_EXPIRED, 'seconds');
+
+module.exports.getScreenName = (res, req) =>
+  req.params.screen_name || ENV.screen_name;
