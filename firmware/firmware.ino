@@ -3,15 +3,9 @@
 #include <ESP8266WiFi.h>
 
 #define PIN 2 // Actually 04 on Makerfocus D1 Mini
-#define GREEN_BUTTON_PIN 14
-#define RED_BUTTON_PIN 12
-
-int greenButtonState = 0;
-int redButtonState = 0;
 
 const bool PRECISE =
     false; // Change to true if you need to define exact light positions
-bool shouldDisplayMessage = false;
 const char *SSID = "";
 const char *PASSWORD = "";
 const char *HOST = "strtw.herokuapp.com"; // Or where-ever you deployed your API
@@ -30,9 +24,6 @@ Adafruit_NeoPixel strip =
     Adafruit_NeoPixel(NUM_PIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 void setup() {
-  pinMode(GREEN_BUTTON_PIN, INPUT);
-  pinMode(RED_BUTTON_PIN, INPUT);
-
   initColors();
 
   strip.begin();
@@ -46,17 +37,12 @@ void setup() {
 }
 
 void loop() {
-  checkButtonState();
-
-  if (WiFi.status() != WL_CONNECTED && shouldDisplayMessage) {
+  if (WiFi.status() != WL_CONNECTED) {
     colorWipe();
     lightErrorMessage();
     Serial.print(".");
-  } else if (shouldDisplayMessage) {
     colorWipe();
     displayMessage();
-  } else {
-    lightAll();
   }
 }
 
@@ -68,7 +54,7 @@ void displayMessage() {
     client.print(String("GET /" + PATH) + " HTTP/1.1\r\n" + "Host: " + HOST +
                  "\r\n" + "Connection: close\r\n" + "\r\n");
 
-    while (client.connected() && shouldDisplayMessage) {
+    while (client.connected()) {
       if (client.available()) {
         message = client.readStringUntil('\n');
         JsonArray &pixelsArray = jsonBuffer.parseArray(message);
@@ -90,12 +76,10 @@ void displayMessage() {
     Serial.println("connection failed!]");
     client.stop();
   }
-  wait(300);
+  delay(300);
 }
 
 void lightLetter(int pixel) {
-  checkButtonState();
-
   if (pixel >= 8 && pixel <= 16) {
     pixelToLight = pixel + 1;
   } else {
@@ -104,10 +88,10 @@ void lightLetter(int pixel) {
 
   strip.setPixelColor(pixelToLight, 0);
   strip.show();
-  wait(200);
+  delay(200);
   strip.setPixelColor(pixelToLight, colors[pixelToLight]);
   strip.show();
-  wait(1050);
+  delay(1050);
   strip.setPixelColor(pixelToLight, 0);
   strip.show();
 }
@@ -168,67 +152,51 @@ void lightPreciseLetter(int pixel) {
   } else if (pixel == 25) {
     pixelToLight = 1; // z
   }
+}
 
-  void lightAll() {
-    for (int i = 0; i < strip.numPixels(); i++) {
-      strip.setPixelColor(i, colors[i]);
-      strip.show();
+void lightAll() {
+  for (int i = 0; i < strip.numPixels(); i++) {
+    strip.setPixelColor(i, colors[i]);
+    strip.show();
+  }
+}
+
+void lightErrorMessage() {
+  for (int i = 0; i < ERROR_MESSAGE_SIZE; i++) {
+    if (!PRECISE) {
+      lightLetter(ERROR_MESSAGE[i]);
+    } else {
+      lightPreciseLetter(ERROR_MESSAGE[i]);
     }
   }
+}
 
-  void lightErrorMessage() {
-    for (int i = 0; i < ERROR_MESSAGE_SIZE; i++) {
-      if (!PRECISE) {
-        lightLetter(ERROR_MESSAGE[i]);
-      } else {
-        lightPreciseLetter(ERROR_MESSAGE[i]);
-      }
+void colorWipe() {
+  for (uint16_t i = 0; i < strip.numPixels(); i++) {
+    strip.setPixelColor(i, 0);
+    strip.show();
+  }
+}
+
+void initColors() {
+  for (int i = 0; i < strip.numPixels(); i++) {
+    int rgb = i % 5;
+    switch (rgb) {
+    case 0:
+      colors[i] = strip.Color(255, 0, 0); // green
+      break;
+    case 1:
+      colors[i] = strip.Color(0, 255, 0); // red
+      break;
+    case 2:
+      colors[i] = strip.Color(0, 0, 255); // blue
+      break;
+    case 3:
+      colors[i] = strip.Color(255, 0, 255); // magenta
+      break;
+    case 4:
+      colors[i] = strip.Color(255, 255, 0); // yellow
+      break;
     }
   }
-
-  void colorWipe() {
-    for (uint16_t i = 0; i < strip.numPixels(); i++) {
-      strip.setPixelColor(i, 0);
-      strip.show();
-    }
-  }
-
-  void checkButtonState() {
-    greenButtonState = digitalRead(GREEN_BUTTON_PIN);
-    redButtonState = digitalRead(RED_BUTTON_PIN);
-
-    if (greenButtonState == LOW) {
-      shouldDisplayMessage = true;
-    } else if (redButtonState == HIGH) {
-      shouldDisplayMessage = false;
-    }
-  }
-
-  void initColors() {
-    for (int i = 0; i < strip.numPixels(); i++) {
-      int rgb = i % 5;
-      switch (rgb) {
-      case 0:
-        colors[i] = strip.Color(255, 0, 0); // green
-        break;
-      case 1:
-        colors[i] = strip.Color(0, 255, 0); // red
-        break;
-      case 2:
-        colors[i] = strip.Color(0, 0, 255); // blue
-        break;
-      case 3:
-        colors[i] = strip.Color(255, 0, 255); // magenta
-        break;
-      case 4:
-        colors[i] = strip.Color(255, 255, 0); // yellow
-        break;
-      }
-    }
-  }
-
-  void wait(int ms) {
-    if (shouldDisplayMessage) {
-      delay(ms);
-    }
-  }
+}
