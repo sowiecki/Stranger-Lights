@@ -9,7 +9,8 @@ module.exports.convertTweetToLetterIndexes = (
 ) => {
   const indexes = text
     .toLowerCase()
-    .replace(`@${screenName.toLowerCase()}`, '')
+    // .replace(`@${screenName.toLowerCase()}`, '') // Filter only defined username
+    .replace(/@\w+/g, '') // Filter all usernames
     .split('')
     .map(letter => letter.charCodeAt(0) - 97)
     .filter(index => index >= 0 && index <= 26);
