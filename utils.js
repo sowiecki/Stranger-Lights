@@ -15,7 +15,10 @@ module.exports.convertTweetToLetterIndexes = (
     .map(letter => letter.charCodeAt(0) - 97)
     .filter(index => index >= 0 && index <= 26);
 
-  return JSON.stringify(indexes);
+  return JSON.stringify({
+    indexes: indexes,
+    rawText: text
+  });
 };
 
 module.exports.getTime = () => moment();

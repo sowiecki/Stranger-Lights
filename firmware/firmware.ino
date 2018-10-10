@@ -74,7 +74,11 @@ void displayMessage() {
     while (client.connected() && WiFi.status() == WL_CONNECTED) {
       if (client.available()) {
         message = client.readStringUntil('\n');
-        JsonArray &pixelsArray = jsonBuffer.parseArray(message);
+        JsonObject &messageData = jsonBuffer.parseObject(message);
+        JsonArray &pixelsArray = jsonBuffer.parseArray(messageData["indexes"]);
+        String rawText = messageData["rawText"];
+
+        Serial.println(rawText);
 
         for (auto value : pixelsArray) {
           checkButtonStates();
