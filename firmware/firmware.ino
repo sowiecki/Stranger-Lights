@@ -1,16 +1,22 @@
+#include <Adafruit_GFX.h>
 #include <Adafruit_NeoPixel.h>
+#include <Adafruit_SSD1306.h>
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
+#include <SPI.h>
+#include <Wire.h>
 
 #include "secrets.h"
 
+#define PRECISE true // Change to true if you need to define exact light positions
+
+#define OLED_RESET 16
 #define NEOPIXEL_PIN 2      // GPIO2, D4
 #define BUTTON_PIN_GREEN 16 // GPIO16, D0
 #define BUTTON_PIN_RED 4    // GPIO0, D2
 #define DISPLAY_MESSAGE_MODE 0
 #define RAINBOW_MODE 1
 
-const bool PRECISE = true;                // Change to true if you need to define exact light positions
 const char *HOST = "strtw.herokuapp.com"; // Or where-ever you deployed your API
 const int HTTPS_PORT = 443;
 const int8_t NUM_PIXELS = 100;
@@ -25,6 +31,14 @@ int8_t pixelToLight;
 
 Adafruit_NeoPixel strip =
     Adafruit_NeoPixel(NUM_PIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
+
+#include "utils.h";
+
+#if (PRECISE)
+#include "lightLetter.h";
+#else
+#include "lightLetterPrecise.h";
+#endif
 
 void setup() {
   pinMode(BUTTON_PIN_GREEN, INPUT);
@@ -75,7 +89,7 @@ void displayMessage() {
       if (client.available()) {
         message = client.readStringUntil('\n');
         JsonObject &messageData = jsonBuffer.parseObject(message);
-        JsonArray &pixelsArray = jsonBuffer.parseArray(messageData["indexes"]);
+        JsonArray &pixelsArray = messageData["indexes"];
         String rawText = messageData["rawText"];
 
         Serial.println(rawText);
@@ -86,11 +100,7 @@ void displayMessage() {
             break;
           int letterPosition = value.as<int>();
 
-          if (!PRECISE) {
-            lightLetter(letterPosition);
-          } else {
-            lightPreciseLetter(letterPosition);
-          }
+          lightLetter(letterPosition);
         }
       }
     }
@@ -104,103 +114,6 @@ void displayMessage() {
   delay(300);
 }
 
-void checkButtonStates() {
-  if (digitalRead(BUTTON_PIN_GREEN) == LOW) {
-    mode = DISPLAY_MESSAGE_MODE;
-  } else if (digitalRead(BUTTON_PIN_RED) == LOW) {
-    mode = RAINBOW_MODE;
-  }
-}
-
-void lightLetter(int pixel) {
-  if (pixel >= 8 && pixel <= 16) {
-    pixelToLight = pixel + 1;
-  } else {
-    pixelToLight = 25 - pixel;
-  }
-
-  strip.setPixelColor(pixelToLight, 0);
-  strip.show();
-  delay(200);
-  strip.setPixelColor(pixelToLight, colors[pixelToLight]);
-  strip.show();
-
-  lazyDelay();
-
-  strip.setPixelColor(pixelToLight, 0);
-  strip.show();
-}
-
-// Change each letter to the actual index of that letter's light position
-void lightPreciseLetter(int pixel) {
-  if (pixel == 0) {
-    pixelToLight = 61; // a
-  } else if (pixel == 1) {
-    pixelToLight = 59; // b
-  } else if (pixel == 2) {
-    pixelToLight = 57; // c
-  } else if (pixel == 3) {
-    pixelToLight = 55; // d
-  } else if (pixel == 4) {
-    pixelToLight = 54; // e
-  } else if (pixel == 5) {
-    pixelToLight = 52; // f
-  } else if (pixel == 6) {
-    pixelToLight = 51; // g
-  } else if (pixel == 7) {
-    pixelToLight = 50; // h
-  } else if (pixel == 8) {
-    pixelToLight = 26; // i
-  } else if (pixel == 9) {
-    pixelToLight = 29; // j
-  } else if (pixel == 10) {
-    pixelToLight = 30; // k
-  } else if (pixel == 11) {
-    pixelToLight = 32; // l
-  } else if (pixel == 12) {
-    pixelToLight = 34; // m
-  } else if (pixel == 13) {
-    pixelToLight = 36; // n
-  } else if (pixel == 14) {
-    pixelToLight = 38; // o
-  } else if (pixel == 15) {
-    pixelToLight = 39; // p
-  } else if (pixel == 16) {
-    pixelToLight = 41; // q
-  } else if (pixel == 17) {
-    pixelToLight = 19; // r
-  } else if (pixel == 18) {
-    pixelToLight = 17; // s
-  } else if (pixel == 19) {
-    pixelToLight = 15; // t
-  } else if (pixel == 20) {
-    pixelToLight = 14; // u
-  } else if (pixel == 21) {
-    pixelToLight = 12; // v
-  } else if (pixel == 22) {
-    pixelToLight = 11; // w
-  } else if (pixel == 23) {
-    pixelToLight = 9; // x
-  } else if (pixel == 24) {
-    pixelToLight = 7; // y
-  } else if (pixel == 25) {
-    pixelToLight = 5; // z
-  }
-
-  Serial.println(pixelToLight);
-
-  strip.setPixelColor(pixelToLight, 0);
-  strip.show();
-  delay(200);
-  strip.setPixelColor(pixelToLight, colors[pixelToLight]);
-  strip.show();
-
-  lazyDelay();
-
-  strip.setPixelColor(pixelToLight, 0);
-  strip.show();
-}
-
 void lightAll() {
   for (int i = 0; i < strip.numPixels(); i++) {
     strip.setPixelColor(i, colors[i]);
@@ -212,11 +125,7 @@ void lightErrorMessage() {
   for (int i = 0; i < ERROR_MESSAGE_SIZE; i++) {
     if (WiFi.status() == WL_CONNECTED || mode != DISPLAY_MESSAGE_MODE)
       break;
-    if (!PRECISE) {
-      lightLetter(ERROR_MESSAGE[i]);
-    } else {
-      lightPreciseLetter(ERROR_MESSAGE[i]);
-    }
+    lightLetter(ERROR_MESSAGE[i]);
   }
 }
 
@@ -248,17 +157,6 @@ void initColors() {
       break;
     }
   }
-}
-
-void lazyDelay() {
-  // Lazy way of checking button states while keeping paused for 1050ms
-  delay(300);
-  checkButtonStates();
-  delay(250);
-  checkButtonStates();
-  delay(250);
-  checkButtonStates();
-  delay(250);
 }
 
 void logDeviceData() {
