@@ -2,29 +2,26 @@
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 
+#include "secrets.h"
+
 #define NEOPIXEL_PIN 2      // GPIO2, D4
 #define BUTTON_PIN_GREEN 16 // GPIO16, D0
 #define BUTTON_PIN_RED 4    // GPIO0, D2
 #define DISPLAY_MESSAGE_MODE 0
 #define RAINBOW_MODE 1
 
-const bool PRECISE =
-    false; // Change to true if you need to define exact light positions
-const char *SSID = "ithurtswhenip";
-const char *PASSWORD = "hunter";
+const bool PRECISE = true;                // Change to true if you need to define exact light positions
 const char *HOST = "strtw.herokuapp.com"; // Or where-ever you deployed your API
-String PATH = "YourTwitterStatusHere";
 const int HTTPS_PORT = 443;
 const int8_t NUM_PIXELS = 100;
-int colors[NUM_PIXELS];
-int8_t pixelToLight;
 String message;
-DynamicJsonBuffer jsonBuffer;
 const int ERROR_MESSAGE_SIZE = 12;
-const int ERROR_MESSAGE[12] = {13, 14, 19, 2, 14, 13,
-                               13, 4, 2, 19, 4, 3}; // "notconnected"
+const int ERROR_MESSAGE[15] = {7, 0, 15, 15, 24, 7, 0, 11, 11, 14, 22, 4, 4, 13}; // "happyhalloween"
+// const int ERROR_MESSAGE[12] = {13, 14, 19, 2, 14, 13, 13, 4, 2, 19, 4, 3}; // "notconnected"
 
 int mode = DISPLAY_MESSAGE_MODE;
+int colors[NUM_PIXELS];
+int8_t pixelToLight;
 
 Adafruit_NeoPixel strip =
     Adafruit_NeoPixel(NUM_PIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
@@ -50,14 +47,11 @@ void loop() {
     lightErrorMessage();
     Serial.print(".");
   } else {
-    colorWipe();
     logDeviceData();
-
-    Serial.print("mode: ");
-    Serial.println(mode);
 
     switch (mode) {
     case DISPLAY_MESSAGE_MODE:
+      colorWipe();
       displayMessage();
       break;
     case RAINBOW_MODE:
@@ -69,13 +63,15 @@ void loop() {
 
 void displayMessage() {
   WiFiClient client;
+  DynamicJsonBuffer jsonBuffer;
 
-  Serial.printf("\n[Connecting to %s ... ", HOST);
-  if (client.connect(HOST, 80)) {
+  Serial.printf("\nConnecting to %s ... ", HOST);
+
+  if (mode == DISPLAY_MESSAGE_MODE && client.connect(HOST, 80)) {
     client.print(String("GET /" + PATH) + " HTTP/1.1\r\n" + "Host: " + HOST +
                  "\r\n" + "Connection: close\r\n" + "\r\n");
 
-    while (client.connected() && mode == DISPLAY_MESSAGE_MODE) {
+    while (client.connected() && WiFi.status() == WL_CONNECTED) {
       if (client.available()) {
         message = client.readStringUntil('\n');
         JsonArray &pixelsArray = jsonBuffer.parseArray(message);
@@ -84,7 +80,8 @@ void displayMessage() {
           checkButtonStates();
           if (mode != DISPLAY_MESSAGE_MODE)
             break;
-          const int letterPosition = value.as<int>();
+          int letterPosition = value.as<int>();
+
           if (!PRECISE) {
             lightLetter(letterPosition);
           } else {
@@ -99,6 +96,7 @@ void displayMessage() {
     Serial.println("connection failed!]");
     client.stop();
   }
+
   delay(300);
 }
 
@@ -123,14 +121,7 @@ void lightLetter(int pixel) {
   strip.setPixelColor(pixelToLight, colors[pixelToLight]);
   strip.show();
 
-  // Lazy way of checking button states while keeping paused for 1050ms
-  delay(300);
-  checkButtonStates();
-  delay(250);
-  checkButtonStates();
-  delay(250);
-  checkButtonStates();
-  delay(250);
+  lazyDelay();
 
   strip.setPixelColor(pixelToLight, 0);
   strip.show();
@@ -139,57 +130,57 @@ void lightLetter(int pixel) {
 // Change each letter to the actual index of that letter's light position
 void lightPreciseLetter(int pixel) {
   if (pixel == 0) {
-    pixelToLight = 62; // a
+    pixelToLight = 61; // a
   } else if (pixel == 1) {
-    pixelToLight = 60; // b
+    pixelToLight = 59; // b
   } else if (pixel == 2) {
-    pixelToLight = 59; // c
+    pixelToLight = 57; // c
   } else if (pixel == 3) {
-    pixelToLight = 56; // d
+    pixelToLight = 55; // d
   } else if (pixel == 4) {
     pixelToLight = 54; // e
   } else if (pixel == 5) {
-    pixelToLight = 51; // f
+    pixelToLight = 52; // f
   } else if (pixel == 6) {
-    pixelToLight = 49; // g
+    pixelToLight = 51; // g
   } else if (pixel == 7) {
-    pixelToLight = 47; // h
+    pixelToLight = 50; // h
   } else if (pixel == 8) {
-    pixelToLight = 24; // i
+    pixelToLight = 26; // i
   } else if (pixel == 9) {
-    pixelToLight = 26; // j
+    pixelToLight = 29; // j
   } else if (pixel == 10) {
-    pixelToLight = 28; // k
+    pixelToLight = 30; // k
   } else if (pixel == 11) {
-    pixelToLight = 30; // l
+    pixelToLight = 32; // l
   } else if (pixel == 12) {
-    pixelToLight = 32; // m
+    pixelToLight = 34; // m
   } else if (pixel == 13) {
-    pixelToLight = 35; // n
+    pixelToLight = 36; // n
   } else if (pixel == 14) {
     pixelToLight = 38; // o
   } else if (pixel == 15) {
-    pixelToLight = 40; // p
+    pixelToLight = 39; // p
   } else if (pixel == 16) {
-    pixelToLight = 42; // q
+    pixelToLight = 41; // q
   } else if (pixel == 17) {
     pixelToLight = 19; // r
   } else if (pixel == 18) {
     pixelToLight = 17; // s
   } else if (pixel == 19) {
-    pixelToLight = 16; // t
+    pixelToLight = 15; // t
   } else if (pixel == 20) {
-    pixelToLight = 12; // u
+    pixelToLight = 14; // u
   } else if (pixel == 21) {
-    pixelToLight = 11; // v
+    pixelToLight = 12; // v
   } else if (pixel == 22) {
-    pixelToLight = 8; // w
+    pixelToLight = 11; // w
   } else if (pixel == 23) {
-    pixelToLight = 5; // x
+    pixelToLight = 9; // x
   } else if (pixel == 24) {
-    pixelToLight = 3; // y
+    pixelToLight = 7; // y
   } else if (pixel == 25) {
-    pixelToLight = 1; // z
+    pixelToLight = 5; // z
   }
 
   Serial.println(pixelToLight);
@@ -200,14 +191,7 @@ void lightPreciseLetter(int pixel) {
   strip.setPixelColor(pixelToLight, colors[pixelToLight]);
   strip.show();
 
-  // Lazy way of checking button states while keeping paused for 1050ms
-  delay(300);
-  checkButtonStates();
-  delay(250);
-  checkButtonStates();
-  delay(250);
-  checkButtonStates();
-  delay(250);
+  lazyDelay();
 
   strip.setPixelColor(pixelToLight, 0);
   strip.show();
@@ -262,15 +246,32 @@ void initColors() {
   }
 }
 
+void lazyDelay() {
+  // Lazy way of checking button states while keeping paused for 1050ms
+  delay(300);
+  checkButtonStates();
+  delay(250);
+  checkButtonStates();
+  delay(250);
+  checkButtonStates();
+  delay(250);
+}
+
 void logDeviceData() {
+  Serial.print("Mode: ");
+  Serial.println(mode);
+
   Serial.print("Device IP: ");
   Serial.println(WiFi.localIP());
 
   Serial.print("Device MAC: ");
   Serial.println(WiFi.macAddress());
 
-  Serial.print("connecting to ");
+  Serial.print("Connecting to: ");
   Serial.println(HOST);
+
+  Serial.print("Memory heap: ");
+  Serial.println(ESP.getFreeHeap());
 }
 
 // From Adafruit NeoPixel example
