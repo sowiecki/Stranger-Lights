@@ -1,17 +1,14 @@
-#include <Adafruit_GFX.h>
 #include <Adafruit_NeoPixel.h>
-#include <Adafruit_SSD1306.h>
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
-#include <SPI.h>
-#include <Wire.h>
 
 #include "secrets.h"
 
-#define PRECISE true // Change to true if you need to define exact light positions
+#define PRECISE true     // Change to true if you need to define exact light positions
+#define OLED_ENABLE true // Disable if not using an 128x32 OLED
 
-#define OLED_RESET 16
-#define NEOPIXEL_PIN 2      // GPIO2, D4
+// #define NEOPIXEL_PIN 2      // GPIO2, D4 on HiLetgo
+#define NEOPIXEL_PIN 13     // GPIO13, D7 on Heltec
 #define BUTTON_PIN_GREEN 16 // GPIO16, D0
 #define BUTTON_PIN_RED 4    // GPIO0, D2
 #define DISPLAY_MESSAGE_MODE 0
@@ -34,6 +31,10 @@ Adafruit_NeoPixel strip =
 
 #include "utils.h";
 
+#if (OLED_ENABLE)
+#include "oled.h"
+#endif
+
 #if (PRECISE)
 #include "lightLetter.h";
 #else
@@ -51,6 +52,13 @@ void setup() {
 
   Serial.begin(9600);
 
+#if (OLED_ENABLE)
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.clearDisplay();
+  setText("Connecting to " + String(SSID), 0, 0);
+#endif
   Serial.printf("Connecting to %s ", SSID);
   WiFi.begin(SSID, PASSWORD);
   Serial.println(" connected");
@@ -58,7 +66,7 @@ void setup() {
 
 void loop() {
   if (WiFi.status() != WL_CONNECTED) {
-    lightErrorMessage();
+    errorMessages();
     Serial.print(".");
   } else {
     logDeviceData();
@@ -93,6 +101,13 @@ void displayMessage() {
         String rawText = messageData["rawText"];
 
         Serial.println(rawText);
+#if (OLED_ENABLE)
+        display.clearDisplay();
+        setText("@" + PATH, 0, 0);
+        setText(rawText, 0, 8);
+        display.display();
+        display.startscrollleft(0x00, 0x10);
+#endif
 
         for (auto value : pixelsArray) {
           checkButtonStates();
@@ -121,7 +136,15 @@ void lightAll() {
   }
 }
 
-void lightErrorMessage() {
+void errorMessages() {
+#if (OLED_ENABLE)
+  display.clearDisplay();
+  setText("@" + PATH, 0, 0);
+  setText("Error, not connected!", 0, 8);
+  display.display();
+  display.startscrollleft(0x00, 0x10);
+#endif
+
   for (int i = 0; i < ERROR_MESSAGE_SIZE; i++) {
     if (WiFi.status() == WL_CONNECTED || mode != DISPLAY_MESSAGE_MODE)
       break;
