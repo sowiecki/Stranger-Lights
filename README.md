@@ -13,6 +13,16 @@
 Hang a strang of addressable LEDs, starting at the letter Z snaking up through I to Q, then up to H through A.
 Assuming a strange of exactly 26 pixels, see the pixel the [Pixel Map](./PIXELMAP.md) for which pixel index corresponds to which letter.
 
+### `firmware/secrets.h`
+
+Create the following file with your secret WiFi credentials and Twitter handle:
+
+```c
+const char *SSID = "ithurtswhenip";
+const char *PASSWORD = "hunter";
+String PATH = "TwitterNameHere";
+```
+
 ### Firmware
 
 In [firmware/firmware.ino](./firmware/firmware.ino), set `*SSID` `*PASSWORD` to the SSID and password of your WiFi network.

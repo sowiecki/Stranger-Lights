@@ -2,17 +2,33 @@
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 
+// You must create this file yourself, see README.md
 #include "secrets.h"
 
-#define PRECISE true     // Change to true if you need to define exact light positions
-#define OLED_ENABLE true // Disable if not using an 128x32 OLED
+// Configuration
+#define PRECISE true        // Change to true if you need to define exact light positions
+#define OLED_ENABLE true    // Disable if not using an 128x32 OLED
+#define BOARD_TYPE "heltec" // "heltec", hiletgo"
 
-// #define NEOPIXEL_PIN 2      // GPIO2, D4 on HiLetgo
-#define NEOPIXEL_PIN 13     // GPIO13, D7 on Heltec
-#define BUTTON_PIN_GREEN 16 // GPIO16, D0
-#define BUTTON_PIN_RED 4    // GPIO0, D2
+// Pin definitions
+#if (BOARD_TYPE == "heltec")
+#define NEOPIXEL_PIN 12     // GPIO12, D6
+#define BUTTON_PIN_ONE 4    // GPIO4, D2
+#define BUTTON_PIN_TWO 0    // GPIO0, D3
+#define BUTTON_PIN_THREE 15 // GPIO15, D8
+#define BUTTON_PIN_FOUR 12  // GPIO12, D7
+#else if (BOARD_TYPE == "hiletgo")
+#define NEOPIXEL_PIN 2     // GPIO2, D4
+#define BUTTON_PIN_ONE 16  // GPIO16, D0
+#define BUTTON_PIN_TWO 4   // GPIO4, D2
+#define BUTTON_PIN_THREE 0 // GPIO0, D3
+#define BUTTON_PIN_FOUR 2  // GPIO2, D4
+#endif
+
 #define DISPLAY_MESSAGE_MODE 0
 #define RAINBOW_MODE 1
+#define SPOOKY_MODE 2
+#define UNIBEAM_MODE 3
 
 const char *HOST = "strtw.herokuapp.com"; // Or where-ever you deployed your API
 const int HTTPS_PORT = 443;
@@ -31,6 +47,8 @@ Adafruit_NeoPixel strip =
 
 #include "utils.h";
 
+#include "effects.h";
+
 #if (OLED_ENABLE)
 #include "oled.h"
 #endif
@@ -42,8 +60,10 @@ Adafruit_NeoPixel strip =
 #endif
 
 void setup() {
-  pinMode(BUTTON_PIN_GREEN, INPUT);
-  pinMode(BUTTON_PIN_RED, INPUT);
+  pinMode(BUTTON_PIN_ONE, INPUT);
+  pinMode(BUTTON_PIN_TWO, INPUT);
+  pinMode(BUTTON_PIN_THREE, INPUT);
+  pinMode(BUTTON_PIN_FOUR, INPUT);
 
   initColors();
 
@@ -78,6 +98,12 @@ void loop() {
       break;
     case RAINBOW_MODE:
       rainbow(50);
+      break;
+    case SPOOKY_MODE:
+      spooky();
+      break;
+    case UNIBEAM_MODE:
+      colorWipe(strip.Color(255, 255, 255));
       break;
     }
   }
@@ -124,6 +150,8 @@ void displayMessage() {
   } else {
     Serial.println("connection failed!]");
     client.stop();
+
+    errorMessages();
   }
 
   delay(300);
@@ -140,7 +168,7 @@ void errorMessages() {
 #if (OLED_ENABLE)
   display.clearDisplay();
   setText("@" + PATH, 0, 0);
-  setText("Error, not connected!", 0, 8);
+  setText("Not connected", 0, 8);
   display.display();
   display.startscrollleft(0x00, 0x10);
 #endif
@@ -197,36 +225,4 @@ void logDeviceData() {
 
   Serial.print("Memory heap: ");
   Serial.println(ESP.getFreeHeap());
-}
-
-// From Adafruit NeoPixel example
-void rainbow(uint8_t wait) {
-  uint16_t i, j;
-
-  for (j = 0; j < 256; j++) {
-    if (mode != RAINBOW_MODE)
-      break;
-    for (i = 0; i < strip.numPixels(); i++) {
-      checkButtonStates();
-      if (mode != RAINBOW_MODE)
-        break;
-      strip.setPixelColor(i, Wheel((i + j) & 255));
-    }
-    strip.show();
-    delay(wait);
-  }
-}
-
-// From Adafruit NeoPixel example
-uint32_t Wheel(byte WheelPos) {
-  WheelPos = 255 - WheelPos;
-  if (WheelPos < 85) {
-    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-  }
-  if (WheelPos < 170) {
-    WheelPos -= 85;
-    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-  }
-  WheelPos -= 170;
-  return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }
