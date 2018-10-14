@@ -37,6 +37,19 @@ static const unsigned char PROGMEM logo16_glcd_bmp[] =
 #endif
 
 void setText(String text, int axisX, int axisY) {
+  display.stopscroll();
   display.setCursor(axisX, axisY);
   display.println(text);
+  display.display();
+  delay(10);
+}
+
+// Hack to enable using SCL pin as button on Heltec board
+void resetOLED() {
+#if (BOARD_TYPE == 0)
+  delay(500);
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+#endif
 }
