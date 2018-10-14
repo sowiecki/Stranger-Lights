@@ -2,17 +2,34 @@
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 
+// You must create this file yourself, see README.md
 #include "secrets.h"
 
-#define PRECISE true     // Change to true if you need to define exact light positions
+// Configuration
+#define PRECISE false    // Change to true if you need to define exact light positions
 #define OLED_ENABLE true // Disable if not using an 128x32 OLED
+#define BOARD_TYPE 0     // heltec == 0, hiletgo == 1
+#define MAX_BRIGHTNESS 100
 
-// #define NEOPIXEL_PIN 2      // GPIO2, D4 on HiLetgo
-#define NEOPIXEL_PIN 13     // GPIO13, D7 on Heltec
-#define BUTTON_PIN_GREEN 16 // GPIO16, D0
-#define BUTTON_PIN_RED 4    // GPIO0, D2
+// Pin definitions
+#if (BOARD_TYPE == 0)
+#define NEOPIXEL_PIN 12     // GPIO12, D6
+#define BUTTON_PIN_ONE 16   // GPIO16, D0
+#define BUTTON_PIN_TWO 14   // GPIO14, SCL
+#define BUTTON_PIN_THREE 13 // GPIO13, D7
+#define BUTTON_PIN_FOUR 0   // GPIO15, D3
+#else if (BOARD_TYPE == 1)
+#define NEOPIXEL_PIN 2     // GPIO2, D4
+#define BUTTON_PIN_ONE 16  // GPIO16, D0
+#define BUTTON_PIN_TWO 4   // GPIO4, D2
+#define BUTTON_PIN_THREE 0 // GPIO0, D3
+#define BUTTON_PIN_FOUR 2  // GPIO2, D4
+#endif
+
 #define DISPLAY_MESSAGE_MODE 0
 #define RAINBOW_MODE 1
+#define SPOOKY_MODE 2
+#define UNIBEAM_MODE 3
 
 const char *HOST = "strtw.herokuapp.com"; // Or where-ever you deployed your API
 const int HTTPS_PORT = 443;
@@ -24,26 +41,29 @@ const int ERROR_MESSAGE[15] = {7, 0, 15, 15, 24, 7, 0, 11, 11, 14, 22, 4, 4, 13}
 
 int mode = DISPLAY_MESSAGE_MODE;
 int colors[NUM_PIXELS];
-int8_t pixelToLight;
 
 Adafruit_NeoPixel strip =
     Adafruit_NeoPixel(NUM_PIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
-
-#include "utils.h";
 
 #if (OLED_ENABLE)
 #include "oled.h"
 #endif
 
+#include "utils.h";
+
+#include "effects.h";
+
 #if (PRECISE)
-#include "lightLetter.h";
-#else
 #include "lightLetterPrecise.h";
+#else
+#include "lightLetter.h";
 #endif
 
 void setup() {
-  pinMode(BUTTON_PIN_GREEN, INPUT);
-  pinMode(BUTTON_PIN_RED, INPUT);
+  pinMode(BUTTON_PIN_ONE, INPUT);
+  pinMode(BUTTON_PIN_TWO, INPUT);
+  pinMode(BUTTON_PIN_THREE, INPUT);
+  pinMode(BUTTON_PIN_FOUR, INPUT);
 
   initColors();
 
@@ -53,12 +73,12 @@ void setup() {
   Serial.begin(9600);
 
 #if (OLED_ENABLE)
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
+  resetOLED();
   display.clearDisplay();
   setText("Connecting to " + String(SSID), 0, 0);
+  display.display();
 #endif
+
   Serial.printf("Connecting to %s ", SSID);
   WiFi.begin(SSID, PASSWORD);
   Serial.println(" connected");
@@ -78,6 +98,12 @@ void loop() {
       break;
     case RAINBOW_MODE:
       rainbow(50);
+      break;
+    case SPOOKY_MODE:
+      spooky();
+      break;
+    case UNIBEAM_MODE:
+      unibeam();
       break;
     }
   }
@@ -101,7 +127,9 @@ void displayMessage() {
         String rawText = messageData["rawText"];
 
         Serial.println(rawText);
+
 #if (OLED_ENABLE)
+        resetOLED();
         display.clearDisplay();
         setText("@" + PATH, 0, 0);
         setText(rawText, 0, 8);
@@ -113,7 +141,7 @@ void displayMessage() {
           checkButtonStates();
           if (mode != DISPLAY_MESSAGE_MODE)
             break;
-          int letterPosition = value.as<int>();
+          int8_t letterPosition = value.as<int8_t>();
 
           lightLetter(letterPosition);
         }
@@ -124,6 +152,8 @@ void displayMessage() {
   } else {
     Serial.println("connection failed!]");
     client.stop();
+
+    errorMessages();
   }
 
   delay(300);
@@ -140,7 +170,8 @@ void errorMessages() {
 #if (OLED_ENABLE)
   display.clearDisplay();
   setText("@" + PATH, 0, 0);
-  setText("Error, not connected!", 0, 8);
+  setText("Not connected", 0, 8);
+  setText("Mode: " + String(mode), 0, 16);
   display.display();
   display.startscrollleft(0x00, 0x10);
 #endif
@@ -159,29 +190,6 @@ void colorWipe() {
   }
 }
 
-void initColors() {
-  for (int i = 0; i < strip.numPixels(); i++) {
-    int rgb = i % 5;
-    switch (rgb) {
-    case 0:
-      colors[i] = strip.Color(255, 0, 0); // green
-      break;
-    case 1:
-      colors[i] = strip.Color(0, 255, 0); // red
-      break;
-    case 2:
-      colors[i] = strip.Color(0, 0, 255); // blue
-      break;
-    case 3:
-      colors[i] = strip.Color(255, 0, 255); // magenta
-      break;
-    case 4:
-      colors[i] = strip.Color(255, 255, 0); // yellow
-      break;
-    }
-  }
-}
-
 void logDeviceData() {
   Serial.print("Mode: ");
   Serial.println(mode);
@@ -197,36 +205,4 @@ void logDeviceData() {
 
   Serial.print("Memory heap: ");
   Serial.println(ESP.getFreeHeap());
-}
-
-// From Adafruit NeoPixel example
-void rainbow(uint8_t wait) {
-  uint16_t i, j;
-
-  for (j = 0; j < 256; j++) {
-    if (mode != RAINBOW_MODE)
-      break;
-    for (i = 0; i < strip.numPixels(); i++) {
-      checkButtonStates();
-      if (mode != RAINBOW_MODE)
-        break;
-      strip.setPixelColor(i, Wheel((i + j) & 255));
-    }
-    strip.show();
-    delay(wait);
-  }
-}
-
-// From Adafruit NeoPixel example
-uint32_t Wheel(byte WheelPos) {
-  WheelPos = 255 - WheelPos;
-  if (WheelPos < 85) {
-    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-  }
-  if (WheelPos < 170) {
-    WheelPos -= 85;
-    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-  }
-  WheelPos -= 170;
-  return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }

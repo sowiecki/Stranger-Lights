@@ -1,18 +1,7 @@
-void lightLetter(int pixel) {
+void lightLetter(int8_t pixel) {
   if (pixel >= 8 && pixel <= 16) {
-    pixelToLight = pixel + 1;
+    flashPixel(pixel + 1);
   } else {
-    pixelToLight = 25 - pixel;
+    flashPixel(25 - pixel);
   }
-
-  strip.setPixelColor(pixelToLight, 0);
-  strip.show();
-  delay(200);
-  strip.setPixelColor(pixelToLight, colors[pixelToLight]);
-  strip.show();
-
-  lazyDelay();
-
-  strip.setPixelColor(pixelToLight, 0);
-  strip.show();
 }
