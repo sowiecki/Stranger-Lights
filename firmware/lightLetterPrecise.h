@@ -1,21 +1,23 @@
 // Change each letter to the actual index of that letter's light position
 void lightLetter(int pixel) {
+  Serial.println("Letter: " + String(pixel));
+
   if (pixel == 0) {
-    flashPixel(61); // a
+    flashPixel(60); // a
   } else if (pixel == 1) {
-    flashPixel(59); // b
+    flashPixel(58); // b
   } else if (pixel == 2) {
     flashPixel(57); // c
   } else if (pixel == 3) {
-    flashPixel(55); // d
+    flashPixel(54); // d
   } else if (pixel == 4) {
-    flashPixel(54); // e
+    flashPixel(53); // e
   } else if (pixel == 5) {
-    flashPixel(52); // f
+    flashPixel(51); // f
   } else if (pixel == 6) {
-    flashPixel(51); // g
+    flashPixel(50); // g
   } else if (pixel == 7) {
-    flashPixel(50); // h
+    flashPixel(49); // h
   } else if (pixel == 8) {
     flashPixel(26); // i
   } else if (pixel == 9) {

@@ -36,9 +36,9 @@ const int HTTPS_PORT = 443;
 const int8_t NUM_PIXELS = 100;
 String message;
 const int ERROR_MESSAGE_SIZE = 12;
-// const int ERROR_MESSAGE[26] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26};
-const int ERROR_MESSAGE[15] = {7, 0, 15, 15, 24, 7, 0, 11, 11, 14, 22, 4, 4, 13}; // "happyhalloween"
-// const int ERROR_MESSAGE[12] = {13, 14, 19, 2, 14, 13, 13, 4, 2, 19, 4, 3}; // "notconnected"
+// const int ERROR_MESSAGE[26] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
+// const int ERROR_MESSAGE[15] = {7, 0, 15, 15, 24, 7, 0, 11, 11, 14, 22, 4, 4, 13}; // "happyhalloween"
+const int ERROR_MESSAGE[12] = {13, 14, 19, 2, 14, 13, 13, 4, 2, 19, 4, 3}; // "notconnected"
 
 int mode = DISPLAY_MESSAGE_MODE;
 int colors[NUM_PIXELS];
@@ -86,12 +86,12 @@ void setup() {
 }
 
 void loop() {
+  logDeviceData();
+
   if (WiFi.status() != WL_CONNECTED) {
     errorMessages();
     Serial.print(".");
   } else {
-    logDeviceData();
-
     switch (mode) {
     case DISPLAY_MESSAGE_MODE:
       colorWipe();
