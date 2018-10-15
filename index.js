@@ -17,7 +17,7 @@ const router = Router();
 const client = new Twitter(ENV.twitter);
 
 const state = {
-  timeSinceLastTweet: getTime().subtract(TWEET_EXPIRED, 'seconds'),
+  timeSinceLastTweet: moment().subtract(TWEET_EXPIRED, 'seconds'),
   storedTweet: { text: 'RUN' }
 };
 

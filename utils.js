@@ -21,8 +21,6 @@ module.exports.convertTweetToLetterIndexes = (
   });
 };
 
-module.exports.getTime = () => moment();
-
 module.exports.getTimeSinceLastTweet = () =>
   moment().subtract(TWEET_EXPIRED, 'seconds');
 

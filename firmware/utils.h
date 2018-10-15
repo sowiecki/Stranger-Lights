@@ -1,13 +1,13 @@
 void checkButtonStates() {
-  if (digitalRead(BUTTON_PIN_ONE) == LOW) {
-    mode = RAINBOW_MODE;
-  } else if (digitalRead(BUTTON_PIN_TWO) == LOW) {
-    mode = SPOOKY_MODE;
-  } else if (digitalRead(BUTTON_PIN_THREE) == LOW) {
-    mode = DISPLAY_MESSAGE_MODE;
-  } else if (digitalRead(BUTTON_PIN_FOUR) == LOW) {
-    mode = UNIBEAM_MODE;
-  }
+  // if (digitalRead(BUTTON_PIN_ONE) == LOW) {
+  //   mode = RAINBOW_MODE;
+  // } else if (digitalRead(BUTTON_PIN_TWO) == LOW) {
+  //   mode = SPOOKY_MODE;
+  // } else if (digitalRead(BUTTON_PIN_THREE) == LOW) {
+  //   mode = DISPLAY_MESSAGE_MODE;
+  // } else if (digitalRead(BUTTON_PIN_FOUR) == LOW) {
+  //   mode = UNIBEAM_MODE;
+  // }
 }
 
 void initColors() {
