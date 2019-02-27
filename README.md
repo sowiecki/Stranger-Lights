@@ -11,7 +11,7 @@
 # Setup
 
 Hang a strang of addressable LEDs, starting at the letter Z snaking up through I to Q, then up to H through A.
-Assuming a strange of exactly 26 pixels, see the pixel the [Pixel Map](./PIXELMAP.md) for which pixel index corresponds to which letter.
+Assuming a strand of exactly 26 pixels, see the [Pixel Map](./PIXELMAP.md) for which pixel index corresponds to which letter.
 
 ### `firmware/secrets.h`
 
