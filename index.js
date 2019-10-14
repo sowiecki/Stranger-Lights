@@ -26,7 +26,7 @@ const state = {
   storedTweets: { default: { text: 'RUN' } }
 };
 
-const filterStatuses = statuses =>
+const filterStatuses = (statuses = []) =>
   statuses
     .filter(
       status => status.retweet_count === 0 && isEmpty(status.retweeted_status)
