@@ -142,7 +142,7 @@ void rainbow(uint8_t wait) {
   }
 }
 
-void flashPixel(int8_t pixel) {
+void flashPixel(int8_t pixel, int8_t wait = 600) {
   strip.setPixelColor(pixel, colors[pixel]);
 
   for (int i = 25; i < MAX_BRIGHTNESS; i += 6) {
@@ -166,5 +166,5 @@ void flashPixel(int8_t pixel) {
   strip.setPixelColor(pixel, 0);
   strip.show();
 
-  delay(600);
+  delay(wait);
 }

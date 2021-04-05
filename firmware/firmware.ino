@@ -6,10 +6,10 @@
 #include "secrets.h"
 
 // Configuration
-#define PRECISE true      // Change to true if you need to define exact light positions
-#define OLED_ENABLE false // Disable if not using an 128x32 OLED
-#define BOARD_TYPE 1      // heltec == 0, hiletgo == 1
-#define MAX_BRIGHTNESS 255
+#define PRECISE false      // Change to true if you need to define exact light positions
+#define OLED_ENABLE true // Disable if not using an 128x32 OLED
+#define BOARD_TYPE 0      // heltec == 0, hiletgo == 1
+#define MAX_BRIGHTNESS 150
 
 // Pin definitions
 #if (BOARD_TYPE == 0)
@@ -120,7 +120,18 @@ void displayMessage() {
     client.print(String("GET /" + PATH) + " HTTP/1.1\r\n" + "Host: " + HOST +
                  "\r\n" + "Connection: close\r\n" + "\r\n");
 
-    while (client.connected() && WiFi.status() == WL_CONNECTED) {
+    while (WiFi.status() == WL_CONNECTED) {
+
+        unsigned long timeout = millis();
+        while (client.available() == 0) {
+          if (millis() - timeout > 5000) {
+            Serial.println("Waiting");
+            client.stop();
+            delay(1000);
+            return;
+          }
+        }
+
       if (client.available()) {
         message = client.readStringUntil('\n');
         JsonObject &messageData = jsonBuffer.parseObject(message);
@@ -146,6 +157,9 @@ void displayMessage() {
 
           lightLetter(letterPosition);
         }
+      } else {
+        errorMessages();
+        break;
       }
     }
 
@@ -164,6 +178,13 @@ void lightAll() {
   for (int i = 0; i < strip.numPixels(); i++) {
     strip.setPixelColor(i, colors[i]);
     strip.show();
+  }
+}
+
+void lightSequence() {
+  for (int i = 0; i < strip.numPixels(); i++) {
+    Serial.println(i);
+    lightLetter(i, 50);
   }
 }
 
@@ -192,6 +213,8 @@ void colorWipe() {
 }
 
 void logDeviceData() {
+  Serial.println("");
+
   Serial.print("Mode: ");
   Serial.println(mode);
 
@@ -206,4 +229,7 @@ void logDeviceData() {
 
   Serial.print("Memory heap: ");
   Serial.println(ESP.getFreeHeap());
+
+  Serial.print("Connection status: ");
+  Serial.println(WiFi.status());
 }

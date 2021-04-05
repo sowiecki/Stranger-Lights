@@ -36,3 +36,4 @@ Deploy this application to Heroku, or feel free to use `strtw.herokuapp.com`. I'
 # Troubleshooting
 
 - _Lights stopping after a period of time (20-40min)_: This could be due to [a memory leak in 2.4.x](https://github.com/esp8266/Arduino/issues/4497). Try installing [ESP8266](https://github.com/esp8266/Arduino) version **2.3.0** within the Board Manager.
+- Heltec board instructions https://heltec-automation-docs.readthedocs.io/en/latest/esp8266+arduino/quick_start.html#via-arduino-board-manager
