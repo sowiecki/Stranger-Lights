@@ -1,5 +1,7 @@
 # Stranger Lights
 
+Display Twitter messages on a string of Christmas lights (inspired by that one Stranger Things scene)
+
 ![demo](./demo.gif)
 
 # Hardware
